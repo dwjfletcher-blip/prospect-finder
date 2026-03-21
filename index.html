@@ -567,6 +567,7 @@ async function fetchOverpass(query) {
   let lastErr;
   for (const url of OVERPASS_ENDPOINTS) {
     try {
+      console.log('[Overpass] Trying:', url);
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 30000);
       const res = await fetch(url, {
@@ -576,13 +577,17 @@ async function fetchOverpass(query) {
         signal: controller.signal,
       });
       clearTimeout(timer);
-      if (res.status === 429) { lastErr = new Error('rate_limit'); continue; }
-      if (!res.ok) { lastErr = new Error(`HTTP ${res.status}`); continue; }
+      if (res.status === 429) { console.warn('[Overpass] Rate limited:', url); lastErr = new Error('rate_limit'); continue; }
+      if (!res.ok) { console.warn('[Overpass] HTTP error', res.status, url); lastErr = new Error(`HTTP ${res.status}`); continue; }
+      console.log('[Overpass] Success:', url);
       return await res.json();
-    } catch (e) { lastErr = e; continue; }
+    } catch (e) {
+      console.error('[Overpass] Failed:', url, e.name, e.message);
+      lastErr = e; continue;
+    }
   }
   if (lastErr?.message === 'rate_limit') throw new Error('The map data service is busy. Wait 30 seconds and try again.');
-  throw new Error('All map data servers failed to respond. Try again in a moment — this is usually temporary.');
+  throw new Error(`All map data servers failed. Last error: ${lastErr?.message || 'unknown'}`);
 }
 
 async function queryOverpass(lat, lon, radius, industryKey) {
