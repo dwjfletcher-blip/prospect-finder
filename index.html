@@ -216,6 +216,18 @@
     .filter-tab.active { color: var(--accent-bright); border-bottom-color: var(--accent-bright); }
     .filter-tab:hover:not(.active) { color: var(--text); }
 
+    .sort-btn {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.03em;
+      border: 1.5px solid var(--border);
+      color: var(--muted); background: transparent;
+      cursor: pointer; transition: all 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .sort-btn.active { background: rgba(249,115,22,0.14); border-color: rgba(249,115,22,0.4); color: #FDBA74; }
+    .sort-btn:hover:not(.active) { border-color: var(--border-hi); color: var(--text); }
+
     /* ── Results area ─────────────────────────────────────── */
     .results-panel { padding: 1.25rem 1.5rem 3rem; }
 
@@ -418,7 +430,7 @@
 
     <div class="hint-box">
       <div class="hint-box-label">How it works</div>
-      <p>Enter a city and industry, then hit Search. Leads are scored 0–100. Businesses with no website score highest — those are your best opportunities.</p>
+      <p>Enter a city, select one or more industries, and hit Search. Leads are scored 0–100. Businesses with no website score highest — those are your best opportunities.</p>
     </div>
 
   </aside>
@@ -426,12 +438,17 @@
   <!-- Main content -->
   <main>
 
-    <!-- Filter tabs -->
+    <!-- Filter tabs + sort -->
     <div class="filter-tabs">
       <div class="filter-tab active" data-tab="all"       onclick="setTab('all')">All</div>
       <div class="filter-tab"        data-tab="hot"       onclick="setTab('hot')">Hot Leads</div>
       <div class="filter-tab"        data-tab="contacted" onclick="setTab('contacted')">Contacted</div>
       <div class="filter-tab"        data-tab="skipped"   onclick="setTab('skipped')">Skipped</div>
+      <div style="flex:1;"></div>
+      <div style="display:flex; align-items:center; gap:4px; padding: 0 4px;">
+        <button class="sort-btn active" data-sort="grade"    onclick="setSort('grade')"   >Grade</button>
+        <button class="sort-btn"        data-sort="distance" onclick="setSort('distance')">Distance</button>
+      </div>
     </div>
 
     <!-- Results area -->
@@ -483,7 +500,9 @@
 // STATE
 // ============================================================
 const state = {
-  industry: 'restaurant',
+  industries:   ['restaurant'],
+  sortBy:       'grade',
+  searchCenter: null,
   results: [],
   activeTab: 'all',
   contacted: JSON.parse(localStorage.getItem('fmc_contacted') || '{}'),
@@ -528,10 +547,25 @@ async function runSearch() {
     const geo = await geocodeCity(city);
     if (!geo) throw new Error(`Could not find "${city}". Try being more specific — e.g. "Brookhaven, PA" or "Chester County, PA".`);
 
-    const radius  = document.getElementById('radius-select').value;
-    const results = await queryOverpass(geo.lat, geo.lon, radius, state.industry);
+    state.searchCenter = { lat: parseFloat(geo.lat), lon: parseFloat(geo.lon) };
 
-    state.results   = results;
+    const radius = document.getElementById('radius-select').value;
+    const queries = state.industries.map(ind => queryOverpass(geo.lat, geo.lon, radius, ind));
+    const batches = await Promise.all(queries);
+
+    // Merge and deduplicate across industries
+    const seen = new Set();
+    const merged = batches.flat().filter(b => {
+      if (seen.has(b.id)) return false;
+      seen.add(b.id); return true;
+    });
+
+    // Attach distance to each result
+    merged.forEach(b => {
+      b.distance = (b.lat && b.lon) ? haversine(state.searchCenter.lat, state.searchCenter.lon, b.lat, b.lon) : null;
+    });
+
+    state.results   = merged;
     state.activeTab = 'all';
     setTabUI('all');
     renderResults();
@@ -553,6 +587,14 @@ async function geocodeCity(city) {
     const preferred = data.find(r => ['city','town','village','borough','suburb','municipality','hamlet','administrative'].includes(r.type)) || data[0];
     return { lat: preferred.lat, lon: preferred.lon, displayName: preferred.display_name };
   } catch { return null; }
+}
+
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 3958.8;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.asin(Math.sqrt(a));
 }
 
 async function fetchOverpass(query) {
@@ -814,6 +856,12 @@ function renderResults() {
   if (tab === 'contacted') list = list.filter(b => state.contacted[b.id]);
   if (tab === 'skipped')   list = list.filter(b => state.skipped[b.id]);
 
+  if (state.sortBy === 'distance') {
+    list = [...list].sort((a, b) => (a.distance ?? 9999) - (b.distance ?? 9999));
+  } else {
+    list = [...list].sort((a, b) => b.scoring.total - a.scoring.total);
+  }
+
   const count   = list.length;
   const total   = state.results.length;
   const hot     = state.results.filter(b => b.scoring.total >= 70 && !state.contacted[b.id] && !state.skipped[b.id]).length;
@@ -898,7 +946,10 @@ function renderCard(biz, index) {
             <span class="mono" style="font-size:10px; color:var(--muted);">${biz.type}</span>
           </div>
           <div style="font-size:14px; font-weight:700; line-height:1.2; letter-spacing:-0.01em; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escHtml(biz.name)}</div>
-          ${biz.address ? `<div style="font-size:12px; color:var(--muted); line-height:1.4;">${escHtml(biz.address)}</div>` : ''}
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            ${biz.address ? `<div style="font-size:12px; color:var(--muted); line-height:1.4;">${escHtml(biz.address)}</div>` : ''}
+            ${biz.distance != null ? `<div style="font-size:11px; color:var(--muted); font-family:'JetBrains Mono',monospace; flex-shrink:0;">${biz.distance < 0.1 ? '<0.1' : biz.distance.toFixed(1)} mi</div>` : ''}
+          </div>
         </div>
         <!-- Expand -->
         <button class="icon-btn" onclick="toggleExpand('${biz.id}')" title="Score breakdown / Notes">
@@ -1031,15 +1082,30 @@ function escHtml(str) {
 }
 
 // ============================================================
-// INDUSTRY CHIP SELECTION
+// INDUSTRY CHIP SELECTION (multi-select)
 // ============================================================
 document.querySelectorAll('.chip').forEach(chip => {
   chip.addEventListener('click', () => {
-    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-    state.industry = chip.dataset.industry;
+    chip.classList.toggle('active');
+    state.industries = Array.from(document.querySelectorAll('.chip.active')).map(c => c.dataset.industry);
+    // Always keep at least one selected
+    if (state.industries.length === 0) {
+      chip.classList.add('active');
+      state.industries = [chip.dataset.industry];
+    }
   });
 });
+
+// ============================================================
+// SORT
+// ============================================================
+function setSort(by) {
+  state.sortBy = by;
+  document.querySelectorAll('.sort-btn').forEach(el => {
+    el.classList.toggle('active', el.dataset.sort === by);
+  });
+  renderResults();
+}
 
 // Search on Enter
 document.getElementById('city-input').addEventListener('keydown', e => {
