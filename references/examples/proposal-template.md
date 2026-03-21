@@ -14,7 +14,7 @@ Strip the "Notes for David" section before sending.
 
 **Overview**
 
-[Business Name] needs a professional web presence that [reflects their brand / drives more customers / replaces their outdated site — pick what applies]. This proposal outlines three options based on scope and budget, so you can choose what fits best.
+[Business Name] needs a professional web presence that [reflects their brand / drives more customers / replaces their outdated site — pick what applies]. This proposal outlines three package options, each available as a one-time purchase or a lower-cost hybrid plan.
 
 ---
 
@@ -30,26 +30,40 @@ Strip the "Notes for David" section before sending.
 
 **Packages**
 
-**Starter — $800**
+**Starter**
 Best for businesses that need a clean, professional web presence fast.
 - Up to 5 pages
 - Standard design
 - Contact form
 - 3 rounds of revisions
+- One-time: **$800** | Hybrid: **$400 upfront + $99/month**
 
-**Professional — $1,800** *(most popular)*
+**Professional** *(most popular)*
 Best for businesses that want a polished, multi-page site built to convert.
 - Up to 10 pages
 - Custom design tailored to your brand
 - Contact form + [optional: booking, gallery, or menu — pick what applies]
 - 5 rounds of revisions
+- One-time: **$1,800** | Hybrid: **$800 upfront + $149/month**
 
-**Premium — $3,500+**
+**Premium**
 Best for businesses that want a high-end build and ongoing design support.
 - Unlimited pages
 - Full custom design and functionality
 - Priority turnaround
 - Unlimited revisions for 3 months post-launch
+- One-time: **$3,500+** | Hybrid: **$1,500 upfront + $249/month**
+
+---
+
+**About the Hybrid Plan**
+
+The hybrid option splits the cost — a reduced upfront fee covers the build, and the monthly fee covers hosting, maintenance, and ongoing care. Minimum 12-month commitment. You own the site outright after month 12, with the option to continue the care plan month-to-month.
+
+What the monthly care plan includes:
+- Managed hosting
+- Security and software updates
+- Minor content changes (under 1 hour/month)
 
 ---
 
@@ -57,8 +71,8 @@ Best for businesses that want a high-end build and ongoing design support.
 
 - Copywriting — client provides all written content
 - Photography or custom graphics — client provides all images
-- Ongoing maintenance after the revision period
 - Third-party software fees (booking tools, payment processors, etc.)
+- Development work beyond the scope above
 
 ---
 
@@ -70,7 +84,8 @@ Project begins upon receipt of deposit and client-provided content. Estimated de
 
 **Payment**
 
-50% deposit required to begin. Remaining balance due before the site goes live.
+One-time: 50% deposit to begin, balance due before the site goes live.
+Hybrid: Upfront fee due at signing, monthly billing begins on launch date.
 
 ---
 
@@ -82,5 +97,6 @@ If one of these options looks right, let's schedule a quick call to go over your
 
 **Notes for David (strip before sending)**
 - Swap the "optional" line in Professional to match what this client actually needs — don't leave it generic.
-- If they push back on price, hold the number and trim scope instead. Never discount the same deliverable.
+- If they push back on price, offer the hybrid — don't discount the one-time rate.
+- If they ask what happens if they cancel the hybrid, be direct: care plan ends, site stays theirs after month 12, or they pay the remaining balance to exit early.
 - Get the deposit before doing a single thing.
