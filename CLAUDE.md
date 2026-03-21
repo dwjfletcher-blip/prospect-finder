@@ -42,6 +42,18 @@ These are workflows to templatize as patterns emerge:
 
 ---
 
+## Frameworks & References
+
+When relevant — especially for pricing, offers, lead generation, or business model decisions — draw on the principles from Alex Hormozi's books:
+
+- **$100M Offers** — How to structure an offer so compelling people feel stupid saying no. Relevant when pricing, scoping, or positioning a service.
+- **$100M Leads** — How to get a consistent flow of leads. Relevant when discussing outreach, marketing, or client acquisition strategy.
+- **The Money Models** — How businesses make money and which models scale. Relevant when evaluating revenue ideas or new service structures.
+
+These are a lens, not a rulebook. Don't force them into every conversation — apply them when the topic warrants it.
+
+---
+
 ## Decision Log
 
 Decisions are logged in `decisions/log.md`. Append-only — never edit past entries.
