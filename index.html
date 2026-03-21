@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#090806">
+  <title>Prospect Finder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --accent: #F97316;
+      --accent-bright: #FB923C;
+      --bg: #090806;
+      --navy-1: #0F0D0A;
+      --navy-2: #161310;
+      --navy-3: #1D1914;
+      --hot: #F43F5E;
+      --gold: #F59E0B;
+      --green: #10B981;
+      --text: #F0E4D0;
+      --muted: #7A6A56;
+      --border: rgba(255,220,170,0.07);
+      --border-hi: rgba(255,220,170,0.14);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Ambient glow */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 70% 55% at 5% 0%, rgba(249,115,22,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 95% 90%, rgba(249,115,22,0.035) 0%, transparent 55%);
+    }
+
+    /* ── Header ───────────────────────────────────────────── */
+    .site-header {
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(9,8,6,0.9);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border);
+      height: 58px;
+      display: flex; align-items: center;
+      padding: 0 1.5rem; gap: 0.875rem;
+    }
+
+    .logo-mark {
+      width: 34px; height: 34px;
+      background: linear-gradient(140deg, #FDBA74 0%, #EA6B0A 100%);
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 16px; color: #1a0d00; flex-shrink: 0;
+      box-shadow: 0 2px 16px rgba(249,115,22,0.45);
+    }
+
+    .header-title {
+      font-size: 14px; font-weight: 700; letter-spacing: -0.01em; line-height: 1;
+    }
+    .header-sub {
+      font-size: 11px; color: var(--muted); margin-top: 2px;
+    }
+
+    #result-count {
+      margin-left: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; color: var(--muted);
+    }
+
+    /* ── App shell ────────────────────────────────────────── */
+    .app-layout {
+      display: grid;
+      grid-template-columns: 290px 1fr;
+      min-height: calc(100dvh - 58px);
+      position: relative; z-index: 1;
+    }
+
+    /* ── Sidebar ──────────────────────────────────────────── */
+    .sidebar {
+      position: sticky;
+      top: 58px;
+      height: calc(100dvh - 58px);
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+      background: var(--navy-1);
+      padding: 1.5rem 1.25rem;
+      scrollbar-width: none;
+    }
+    .sidebar::-webkit-scrollbar { display: none; }
+
+    .sidebar-section { margin-bottom: 1.25rem; }
+
+    .form-label {
+      display: block;
+      font-size: 10.5px; font-weight: 700;
+      letter-spacing: 0.07em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 7px;
+    }
+
+    .form-input {
+      background: var(--navy-3);
+      border: 1.5px solid var(--border);
+      color: var(--text);
+      border-radius: 9px;
+      padding: 10px 13px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      width: 100%;
+      -webkit-appearance: none;
+    }
+    .form-input:focus {
+      border-color: rgba(249,115,22,0.55);
+      box-shadow: 0 0 0 3px rgba(249,115,22,0.1);
+    }
+    .form-input::placeholder { color: var(--muted); }
+
+    select.form-input {
+      appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237A6A56' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-color: var(--navy-3);
+      padding-right: 36px;
+      cursor: pointer;
+    }
+
+    /* ── Chip ─────────────────────────────────────────────── */
+    .chip {
+      flex-shrink: 0;
+      border: 1.5px solid var(--border);
+      background: var(--navy-3);
+      color: var(--muted);
+      font-weight: 600; font-size: 12px;
+      letter-spacing: 0.02em;
+      padding: 6px 13px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+      white-space: nowrap;
+    }
+    .chip.active {
+      background: rgba(249,115,22,0.16);
+      border-color: rgba(249,115,22,0.5);
+      color: #FDBA74;
+      box-shadow: 0 2px 10px rgba(249,115,22,0.18);
+    }
+    .chip:hover:not(.active) { border-color: var(--border-hi); color: var(--text); }
+    .chip:active { transform: scale(0.94); }
+
+    /* ── Primary button ───────────────────────────────────── */
+    .btn-primary {
+      background: linear-gradient(135deg, #FB923C 0%, #C2500A 100%);
+      box-shadow: 0 4px 18px rgba(249,115,22,0.35), 0 1px 3px rgba(0,0,0,0.4);
+      transition: transform 0.15s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.15s ease, opacity 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 26px rgba(249,115,22,0.48), 0 1px 3px rgba(0,0,0,0.4);
+    }
+    .btn-primary:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(249,115,22,0.22); }
+    .btn-primary:disabled { opacity: 0.45; transform: none; cursor: not-allowed; }
+
+    /* ── Hint box ─────────────────────────────────────────── */
+    .hint-box {
+      margin-top: 1.25rem;
+      padding: 14px;
+      background: rgba(249,115,22,0.05);
+      border: 1px solid rgba(249,115,22,0.12);
+      border-radius: 10px;
+    }
+    .hint-box-label {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.07em; text-transform: uppercase;
+      color: rgba(253,186,116,0.6); margin-bottom: 7px;
+    }
+    .hint-box p {
+      font-size: 12px; color: var(--muted); line-height: 1.75;
+    }
+
+    /* ── Filter tabs ──────────────────────────────────────── */
+    .filter-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--navy-1);
+      padding: 0 1.5rem;
+      position: sticky;
+      top: 58px; z-index: 100;
+    }
+    .filter-tab {
+      padding: 13px 16px;
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+      white-space: nowrap;
+    }
+    .filter-tab.active { color: var(--accent-bright); border-bottom-color: var(--accent-bright); }
+    .filter-tab:hover:not(.active) { color: var(--text); }
+
+    /* ── Results area ─────────────────────────────────────── */
+    .results-panel { padding: 1.25rem 1.5rem 3rem; }
+
+    .results-grid { display: grid; gap: 10px; }
+
+    @media (min-width: 1200px) {
+      .results-grid { grid-template-columns: repeat(2, 1fr); }
+      .summary-row { grid-column: 1 / -1; }
+    }
+
+    /* ── Business card ────────────────────────────────────── */
+    .biz-card {
+      background: var(--navy-2);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 15px;
+      animation: fadeUp 0.2s ease-out both;
+      position: relative; overflow: hidden;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .biz-card:hover {
+      border-color: var(--border-hi);
+      box-shadow: 0 6px 28px rgba(0,0,0,0.32);
+    }
+    .biz-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent);
+      pointer-events: none;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0);   }
+    }
+
+    /* ── Badges ───────────────────────────────────────────── */
+    .badge {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.06em;
+      padding: 2px 8px; border-radius: 999px; border: 1px solid;
+    }
+    .badge-no-site  { background: rgba(244,63,94,0.12);  border-color: rgba(244,63,94,0.3);  color: #FB7185; }
+    .badge-has-site { background: rgba(16,185,129,0.10); border-color: rgba(16,185,129,0.3); color: #34D399; }
+    .badge-chain    { background: rgba(244,63,94,0.08);  border-color: rgba(244,63,94,0.22); color: #FB7185; }
+    .badge-social   { background: rgba(245,158,11,0.10); border-color: rgba(245,158,11,0.3); color: #FCD34D; }
+
+    /* ── Icon button ──────────────────────────────────────── */
+    .icon-btn {
+      width: 34px; height: 34px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+      flex-shrink: 0;
+      text-decoration: none;
+    }
+    .icon-btn:hover { background: rgba(255,255,255,0.07); border-color: var(--border-hi); }
+    .icon-btn:active { transform: scale(0.90); }
+
+    /* ── Toggle button ────────────────────────────────────── */
+    .toggle-btn {
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
+      border: 1.5px solid var(--border);
+      color: var(--muted); background: transparent;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .toggle-btn:hover { border-color: var(--border-hi); color: var(--text); }
+    .toggle-btn.contacted {
+      background: rgba(16,185,129,0.12);
+      border-color: rgba(16,185,129,0.4);
+      color: var(--green);
+    }
+    .toggle-btn:active { transform: scale(0.93); }
+
+    /* ── Notes ────────────────────────────────────────────── */
+    .notes-area {
+      background: var(--navy-1);
+      border: 1.5px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      outline: none; resize: none;
+      width: 100%; min-height: 68px;
+      transition: border-color 0.15s ease;
+    }
+    .notes-area:focus { border-color: rgba(249,115,22,0.45); }
+    .notes-area::placeholder { color: var(--muted); }
+
+    /* ── Spinner ──────────────────────────────────────────── */
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid rgba(249,115,22,0.18);
+      border-top-color: var(--accent-bright);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Expand section ───────────────────────────────────── */
+    .expand-section { max-height: 0; overflow: hidden; transition: max-height 0.28s ease; }
+    .expand-section.open { max-height: 720px; }
+
+    .divider { height: 1px; background: var(--border); margin: 12px 0; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* ── Summary stat pills ───────────────────────────────── */
+    .stat-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--navy-2);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+    }
+
+    /* ── Mobile overrides ─────────────────────────────────── */
+    @media (max-width: 768px) {
+      .app-layout { grid-template-columns: 1fr; }
+      .sidebar {
+        position: static;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+      .filter-tabs { position: static; }
+      .results-panel { padding: 1rem 1rem 3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="site-header">
+  <div class="logo-mark">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <circle cx="6.5" cy="6.5" r="5" stroke="#1a0d00" stroke-width="1.6"/>
+      <path d="M10.5 10.5l3.5 3.5" stroke="#1a0d00" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M4.5 6.5h4M6.5 4.5v4" stroke="#1a0d00" stroke-width="1.4" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <div>
+    <div class="header-title">Prospect Finder</div>
+  </div>
+  <div id="result-count"></div>
+</header>
+
+<div class="app-layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+
+    <div class="sidebar-section">
+      <label class="form-label" for="city-input">Location</label>
+      <input id="city-input" class="form-input" type="text"
+        placeholder="City or area (e.g. Tampa, FL)"
+        autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+
+    <div class="sidebar-section">
+      <label class="form-label" for="radius-select">Search Radius</label>
+      <select id="radius-select" class="form-input">
+        <option value="1500">1 mile</option>
+        <option value="3000" selected>2 miles</option>
+        <option value="5000">3 miles</option>
+        <option value="8000">5 miles</option>
+        <option value="16000">10 miles</option>
+      </select>
+    </div>
+
+    <div class="sidebar-section">
+      <label class="form-label">Industry</label>
+      <div style="display:flex; flex-wrap:wrap; gap:6px;">
+        <div class="chip active" data-industry="restaurant">Restaurants</div>
+        <div class="chip" data-industry="cafe">Cafes</div>
+        <div class="chip" data-industry="salon">Salons</div>
+        <div class="chip" data-industry="barbershop">Barbershops</div>
+        <div class="chip" data-industry="auto">Auto Repair</div>
+        <div class="chip" data-industry="dentist">Dentists</div>
+        <div class="chip" data-industry="gym">Gyms</div>
+        <div class="chip" data-industry="nail">Nail Salons</div>
+        <div class="chip" data-industry="retail">Retail</div>
+        <div class="chip" data-industry="plumber">Plumbers</div>
+      </div>
+    </div>
+
+    <button id="search-btn" class="btn-primary"
+      style="width:100%; padding:13px; border-radius:10px; border:none; color:white; font-family:'Inter',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.04em; text-transform:uppercase; cursor:pointer;"
+      onclick="runSearch()">
+      Search Businesses
+    </button>
+
+    <div class="hint-box">
+      <div class="hint-box-label">How it works</div>
+      <p>Enter a city and industry, then hit Search. Leads are scored 0–100. Businesses with no website score highest — those are your best opportunities.</p>
+    </div>
+
+  </aside>
+
+  <!-- Main content -->
+  <main>
+
+    <!-- Filter tabs -->
+    <div class="filter-tabs">
+      <div class="filter-tab active" data-tab="all"       onclick="setTab('all')">All</div>
+      <div class="filter-tab"        data-tab="hot"       onclick="setTab('hot')">Hot Leads</div>
+      <div class="filter-tab"        data-tab="contacted" onclick="setTab('contacted')">Contacted</div>
+      <div class="filter-tab"        data-tab="skipped"   onclick="setTab('skipped')">Skipped</div>
+    </div>
+
+    <!-- Results area -->
+    <div class="results-panel" id="results-wrap">
+
+      <!-- Empty state -->
+      <div id="empty-state" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:80px 20px; text-align:center;">
+        <div style="width:60px; height:60px; background:rgba(249,115,22,0.09); border:1px solid rgba(249,115,22,0.18); border-radius:18px; display:flex; align-items:center; justify-content:center; margin-bottom:20px;">
+          <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+            <circle cx="11" cy="11" r="8" stroke="#FB923C" stroke-width="1.75"/>
+            <path d="M18 18l5 5" stroke="#FB923C" stroke-width="1.75" stroke-linecap="round"/>
+            <path d="M8 11h6M11 8v6" stroke="#FB923C" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div style="font-size:18px; font-weight:700; letter-spacing:-0.02em; margin-bottom:8px;">Find Your Next Client</div>
+        <div style="color:var(--muted); font-size:14px; line-height:1.65; max-width:300px;">Enter a city and pick an industry on the left, then hit Search. Hot Leads are businesses with no website found.</div>
+      </div>
+
+      <!-- Loading state -->
+      <div id="loading-state" style="display:none; flex-direction:column; align-items:center; justify-content:center; padding:80px 20px; gap:16px;">
+        <div class="spinner"></div>
+        <div style="color:var(--muted); font-size:13px;">Searching OpenStreetMap...</div>
+      </div>
+
+      <!-- Error state -->
+      <div id="error-state" style="display:none; flex-direction:column; align-items:center; padding:60px 20px; text-align:center;">
+        <div style="width:54px; height:54px; background:rgba(244,63,94,0.1); border:1px solid rgba(244,63,94,0.2); border-radius:16px; display:flex; align-items:center; justify-content:center; margin-bottom:16px;">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <path d="M11 7.5v4.5M11 15.5v.5" stroke="#F43F5E" stroke-width="1.75" stroke-linecap="round"/>
+            <path d="M9.5 2.5L1 17.5A1.5 1.5 0 002.3 20H19.7A1.5 1.5 0 0021 17.5L12.5 2.5a1.5 1.5 0 00-3 0z" stroke="#F43F5E" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div style="font-size:16px; font-weight:700; margin-bottom:6px;">Search Failed</div>
+        <div id="error-msg" style="color:var(--muted); font-size:13px; line-height:1.6; max-width:280px;"></div>
+        <button onclick="runSearch()" style="margin-top:18px; padding:9px 22px; border-radius:8px; border:1.5px solid var(--border); background:transparent; color:var(--text); font-family:'Inter',sans-serif; font-size:13px; font-weight:600; cursor:pointer; transition:border-color 0.15s ease;" onmouseover="this.style.borderColor='var(--border-hi)'" onmouseout="this.style.borderColor='var(--border)'">Try Again</button>
+      </div>
+
+      <!-- Results -->
+      <div id="results-list" class="results-grid"></div>
+
+    </div>
+
+  </main>
+
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  industry: 'restaurant',
+  results: [],
+  activeTab: 'all',
+  contacted: JSON.parse(localStorage.getItem('fmc_contacted') || '{}'),
+  skipped:   JSON.parse(localStorage.getItem('fmc_skipped')   || '{}'),
+  notes:     JSON.parse(localStorage.getItem('fmc_notes')     || '{}'),
+  expanded:  {},
+};
+
+function saveContacted() { localStorage.setItem('fmc_contacted', JSON.stringify(state.contacted)); }
+function saveSkipped()   { localStorage.setItem('fmc_skipped',   JSON.stringify(state.skipped));   }
+function saveNotes()     { localStorage.setItem('fmc_notes',     JSON.stringify(state.notes));     }
+
+// ============================================================
+// INDUSTRY DEFINITIONS
+// ============================================================
+const INDUSTRIES = {
+  restaurant:  { label: 'Restaurant',   query: '["amenity"="restaurant"]' },
+  cafe:        { label: 'Cafe',         query: '["amenity"="cafe"]' },
+  salon:       { label: 'Hair Salon',   query: '["shop"="hairdresser"]' },
+  barbershop:  { label: 'Barbershop',   query: '["amenity"="barber"]' },
+  auto:        { label: 'Auto Repair',  query: '["shop"="car_repair"]' },
+  dentist:     { label: 'Dentist',      query: '["amenity"="dentist"]' },
+  gym:         { label: 'Gym',          query: '["leisure"="fitness_centre"]' },
+  nail:        { label: 'Nail Salon',   query: '["shop"="beauty"]' },
+  retail:      { label: 'Retail',       query: '["shop"~"clothes|boutique|gift|books|florist"]' },
+  plumber:     { label: 'Plumber',      query: '["craft"="plumber"]' },
+};
+
+// ============================================================
+// SEARCH
+// ============================================================
+async function runSearch() {
+  const city = document.getElementById('city-input').value.trim();
+  if (!city) { document.getElementById('city-input').focus(); return; }
+
+  const btn = document.getElementById('search-btn');
+  btn.disabled = true;
+  btn.textContent = 'SEARCHING...';
+  showState('loading');
+
+  try {
+    const geo = await geocodeCity(city);
+    if (!geo) throw new Error(`Could not find "${city}". Try being more specific — e.g. "Brookhaven, PA" or "Chester County, PA".`);
+
+    const radius  = document.getElementById('radius-select').value;
+    const results = await queryOverpass(geo.lat, geo.lon, radius, state.industry);
+
+    state.results   = results;
+    state.activeTab = 'all';
+    setTabUI('all');
+    renderResults();
+  } catch (err) {
+    document.getElementById('error-msg').textContent = err.message || 'Unknown error.';
+    showState('error');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'SEARCH BUSINESSES';
+}
+
+async function geocodeCity(city) {
+  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=3&addressdetails=1&countrycodes=us`;
+  try {
+    const res  = await fetch(url, { headers: { 'Accept-Language': 'en', 'User-Agent': 'FletchProspector/1.0' } });
+    const data = await res.json();
+    if (!data.length) return null;
+    const preferred = data.find(r => ['city','town','village','borough','suburb','municipality','hamlet','administrative'].includes(r.type)) || data[0];
+    return { lat: preferred.lat, lon: preferred.lon, displayName: preferred.display_name };
+  } catch { return null; }
+}
+
+const OVERPASS_ENDPOINTS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+];
+
+async function fetchOverpass(query) {
+  let lastErr;
+  for (const url of OVERPASS_ENDPOINTS) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 20000);
+      const res = await fetch(url, {
+        method: 'POST',
+        body: 'data=' + encodeURIComponent(query),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (res.status === 429) { lastErr = new Error('rate_limit'); continue; }
+      if (!res.ok) { lastErr = new Error(`HTTP ${res.status}`); continue; }
+      return await res.json();
+    } catch (e) { lastErr = e; }
+  }
+  if (lastErr?.message === 'rate_limit') throw new Error('The map data service is busy. Wait 30 seconds and try again.');
+  throw new Error('Could not reach map data service. Check your connection and try again.');
+}
+
+async function queryOverpass(lat, lon, radius, industryKey) {
+  const tag   = INDUSTRIES[industryKey].query;
+  const query = `
+    [out:json][timeout:25];
+    (
+      node${tag}(around:${radius},${lat},${lon});
+      way${tag}(around:${radius},${lat},${lon});
+    );
+    out body center 80;
+  `;
+  const data = await fetchOverpass(query);
+  return (data.elements || [])
+    .filter(el => el.tags && el.tags.name)
+    .map(el => {
+      const t   = el.tags;
+      const lat = el.lat || el.center?.lat;
+      const lon = el.lon || el.center?.lon;
+      const biz = {
+        id: `${el.type}-${el.id}`,
+        name:    t.name,
+        phone:   t.phone   || t['contact:phone']   || null,
+        website: t.website || t['contact:website'] || t.url || null,
+        email:   t.email   || t['contact:email']   || null,
+        hours:   t.opening_hours || null,
+        address: buildAddress(t),
+        lat, lon,
+        type: INDUSTRIES[industryKey].label,
+        isChainBrand: !!(t.brand || t.operator || t.franchise),
+      };
+      biz.scoring = scoreBusiness(biz);
+      return biz;
+    })
+    .sort((a, b) => b.scoring.total - a.scoring.total);
+}
+
+function buildAddress(t) {
+  const parts = [];
+  if (t['addr:housenumber'] && t['addr:street']) {
+    parts.push(`${t['addr:housenumber']} ${t['addr:street']}`);
+  } else if (t['addr:street']) {
+    parts.push(t['addr:street']);
+  }
+  if (t['addr:city'])  parts.push(t['addr:city']);
+  if (t['addr:state']) parts.push(t['addr:state']);
+  return parts.join(', ') || null;
+}
+
+// ============================================================
+// LEAD SCORING ENGINE
+// ============================================================
+const SOCIAL_DOMAINS = [
+  'facebook.com','fb.com','instagram.com','twitter.com','x.com',
+  'yelp.com','tripadvisor.com','google.com/maps','maps.google','linktr.ee','linktree.com',
+  'squareup.com','order.online','grubhub.com','doordash.com','ubereats.com',
+];
+
+function isSocialUrl(url) {
+  if (!url) return false;
+  try {
+    const host = new URL(url.startsWith('http') ? url : 'https://' + url).hostname.toLowerCase();
+    return SOCIAL_DOMAINS.some(d => host.includes(d));
+  } catch { return false; }
+}
+
+const CHAIN_FRAGMENTS = [
+  "mcdonald","subway","burger king","wendy","taco bell","kfc","chick-fil-a","chickfila",
+  "chipotle","domino","pizza hut","papa john","papa murphy","little caesar","wingstop",
+  "popeye","raising cane","whataburger","sonic drive","arby","jack in the box","del taco",
+  "carl's jr","hardee","five guys","shake shack","in-n-out","culver","steak n shake",
+  "checkers","rally","jersey mike","jimmy john","firehouse sub","quizno","blimpie",
+  "jason's deli","mcalister","applebee","olive garden","chili's","chilis","red lobster",
+  "outback steakhouse","cheesecake factory","tgi friday","hooters","buffalo wild wings",
+  "denny","ihop","waffle house","cracker barrel","golden corral","bob evan",
+  "starbucks","dunkin","panera","tim horton","peet's coffee","peets coffee",
+  "dutch bros","caribou coffee","einstein bagel","bruegger","corner bakery",
+  "great clips","supercuts","sport clips","fantastic sams","regis salon","cost cutter",
+  "hair cuttery","first choice hair","roosters men","floyd's 99","sharkey",
+  "jiffy lube","firestone","midas","aamco","meineke","pep boys","mavis discount",
+  "christian brothers","big o tire","tuffy auto","monro muffler","safelite",
+  "oil can henry","take 5 oil","express oil change","valvoline","goodyear auto",
+  "aspen dental","heartland dental","western dental","pacific dental","comfort dental",
+  "bright now dental","smile direct","clear choice","dentalworks",
+  "planet fitness","la fitness","anytime fitness","24 hour fitness","gold's gym","golds gym",
+  "crunch fitness","orangetheory","orange theory","equinox","soulcycle","soul cycle",
+  "f45 training","pure barre","club pilates","cyclebar","barre3","title boxing","ufc gym",
+  "snap fitness","youfit","workout anytime",
+  "walmart","target","dollar general","dollar tree","family dollar","ross dress",
+  "marshalls","tj maxx","homegoods","hobby lobby","michaels craft","jo-ann","joann fabric",
+  "five below","big lots",
+];
+
+function detectChain(name) {
+  const n = name.toLowerCase().replace(/['']/g, "'");
+  return CHAIN_FRAGMENTS.some(f => n.includes(f));
+}
+
+const GEO_WORDS = new Set([
+  'north','south','east','west','central','downtown','uptown','midtown','lakeside',
+  'lakewood','riverside','beachside','harbor','bay','gulf','ridge','hill','valley',
+  'park','village','square','heights','highland','sunset','sunrise','garden','grove',
+  'forest','coast','shore','island','crossroads','westside','eastside','southside',
+  'northside','creekside','oceanside',
+]);
+
+function detectOwnerName(name)       { return /[\w][\u2018\u2019']s\b/i.test(name); }
+function detectFamilyBiz(name)       { return /\b(family|brothers|sisters|sons|daughters|& sons|& son|and sons)\b/i.test(name); }
+function detectProfessionalSuffix(n) { return /\b(llc|inc|corp|co\.|ltd|pllc|dds|dmd|md|do|pa|pc|associates|group|partners|services)\b/i.test(n); }
+function detectGeoWord(name)         { return name.toLowerCase().split(/[\s,]+/).some(w => GEO_WORDS.has(w)); }
+
+const INDUSTRY_DATA = {
+  'Restaurant': {
+    revenuePts: 18, seoPts: 15,
+    revenueNote: 'Avg $500K–$1.2M revenue. Marketing: 3–6% of revenue. 70% of US restaurants are independent. A $1,500 site is <0.3% of annual revenue.',
+    seoNote: 'Restaurants are top 5 "near me" search category. 88% of mobile local searches convert to a visit within 24 hrs. Menu + hours = core web value.',
+  },
+  'Cafe': {
+    revenuePts: 9, seoPts: 9,
+    revenueNote: 'Avg $150K–$250K revenue. Thin margins, ~2.6% marketing spend. More chain competition in coffee — vet carefully.',
+    seoNote: 'Moderate near-me dependency. Hours, menu, and neighborhood identity are the core use cases. Less urgent than restaurants.',
+  },
+  'Hair Salon': {
+    revenuePts: 13, seoPts: 13,
+    revenueNote: 'Avg $245K revenue. Owner income $70K–$175K. 85%+ are independent. Booking + before/after gallery = direct, measurable website ROI.',
+    seoNote: 'High near-me volume. Online booking reduces no-shows by measurable margin. Before/after photos in Google Images drive new client discovery.',
+  },
+  'Barbershop': {
+    revenuePts: 11, seoPts: 12,
+    revenueNote: 'Avg $180K–$200K revenue. 85%+ independent. Owner is usually on-site cutting hair — highly accessible decision-maker.',
+    seoNote: 'Walk-in + near-me searches both high. A booking page alone demonstrably reduces no-shows and eliminates phone tag for appointments.',
+  },
+  'Auto Repair': {
+    revenuePts: 22, seoPts: 16,
+    revenueNote: 'Avg $1.2M revenue (independent shop). Net margins 20%+. Customer LTV $2.5K–$15K per vehicle owner over time. A $1,500 site = 0.15% of annual revenue — easiest ROI conversation.',
+    seoNote: 'Trust + proximity = primary customer decision factors. "Mechanic near me" is searched constantly with urgency. Website is the trust proof point that wins the call.',
+  },
+  'Dentist': {
+    revenuePts: 21, seoPts: 14,
+    revenueNote: 'Avg $600K–$941K revenue per practice. Marketing budget: 4–7% ($24K–$66K/yr). Patient LTV = $8K–$10K. 87% of US dentists are still independent.',
+    seoNote: 'Emergency + new-patient searches drive discovery. Credentials, before/after photos, and online booking are the three pillars of dental website ROI.',
+  },
+  'Gym': {
+    revenuePts: 15, seoPts: 18,
+    revenueNote: 'Revenue varies widely ($50K–$450K). Boutique studios (yoga, CrossFit, etc.) are the sweet spot. Margins are tight — lead with the ROI case clearly.',
+    seoNote: 'Fitness is the #1 "near me" category by search volume — 55+ searches/gym/month in major cities. Proximity is the #1 membership buying factor.',
+  },
+  'Nail Salon': {
+    revenuePts: 8, seoPts: 11,
+    revenueNote: 'Avg $150K–$300K revenue, but margins are thin (5–20%). 80–90% independent. Price-sensitive owners — lead with booking ROI, not just branding.',
+    seoNote: 'High near-me searches. Portfolio photos + online booking = primary value proposition. Very visual industry — a good photo gallery alone drives bookings.',
+  },
+  'Retail': {
+    revenuePts: 11, seoPts: 8,
+    revenueNote: 'Avg $300K revenue, net margins 5–15%. 85–90% independent boutiques. E-commerce upsell (sell online, not just in-store) is the real pitch here.',
+    seoNote: 'Moderate near-me dependency. Physical foot traffic still dominates, but tourist-area and gift-shop discovery searches are real and capturable.',
+  },
+  'Plumber': {
+    revenuePts: 20, seoPts: 17,
+    revenueNote: 'Avg $300K–$1M revenue. Owner income $70K–$200K. Customer LTV $6K–$25K per homeowner. Not price-sensitive — they understand the cost of not being found.',
+    seoNote: '"Emergency plumber near me" = zero brand loyalty, pure urgency. First result wins the job. One website-sourced call covers the entire cost of the site many times over.',
+  },
+};
+
+function scoreBusiness(biz) {
+  const isChain = detectChain(biz.name);
+  const data = INDUSTRY_DATA[biz.type] || { revenuePts: 10, seoPts: 10, revenueNote: 'Local business.', seoNote: 'Local search value.' };
+
+  let digitalPts, digitalNote;
+  if (!biz.website) {
+    digitalPts = 30;
+    digitalNote = 'No website found anywhere — strongest possible signal. They need you now.';
+  } else if (isSocialUrl(biz.website)) {
+    digitalPts = 22;
+    digitalNote = 'Only a social page or ordering platform listed — not a real site. Clear, addressable gap.';
+  } else {
+    digitalPts = 0;
+    digitalNote = 'Has a real website. Lower priority unless it is outdated or poorly built.';
+  }
+
+  const revenuePts = isChain ? 0 : data.revenuePts;
+
+  let ownerPts = 0;
+  const ownerDetails = [];
+  if (isChain) {
+    ownerDetails.push('Chain/franchise detected — corporate controls the website. The local owner cannot buy one from you.');
+  } else {
+    ownerPts += 8;
+    ownerDetails.push('No chain signals detected (+8)');
+    if (detectOwnerName(biz.name))       { ownerPts = Math.min(20, ownerPts + 8); ownerDetails.push("Owner name in business name — decision-maker is likely on-site (+8)"); }
+    if (detectFamilyBiz(biz.name))       { ownerPts = Math.min(20, ownerPts + 5); ownerDetails.push('Family business signals — stable, long-term operation (+5)'); }
+    if (detectProfessionalSuffix(biz.name)) { ownerPts = Math.min(20, ownerPts + 3); ownerDetails.push('Professional suffix (LLC/Inc/etc.) — legally established (+3)'); }
+    if (detectGeoWord(biz.name))         { ownerPts = Math.min(20, ownerPts + 2); ownerDetails.push('Geographic word in name — single-location local brand (+2)'); }
+  }
+
+  const seoPts = isChain ? 0 : data.seoPts;
+
+  let listingPts = 0;
+  const listingDetails = [];
+  if (biz.phone) { listingPts += 4; listingDetails.push('Phone listed (+4)'); }
+  if (biz.address && biz.address.split(',').length >= 2) {
+    listingPts += 3; listingDetails.push('Street address listed (+3)');
+  } else if (biz.address) {
+    listingPts += 1; listingDetails.push('Partial address (+1)');
+  }
+  if (biz.hours) { listingPts += 2; listingDetails.push('Opening hours on record (+2)'); }
+  if (biz.email) { listingPts += 1; listingDetails.push('Email listed (+1)'); }
+
+  let total = digitalPts + revenuePts + ownerPts + seoPts + listingPts;
+  if (isChain) total = Math.min(total, 12);
+  total = Math.min(100, Math.max(0, total));
+
+  let grade, gradeColor, gradeBg;
+  if      (total >= 90) { grade = 'A+'; gradeColor = '#34D399'; gradeBg = 'rgba(52,211,153,0.13)'; }
+  else if (total >= 80) { grade = 'A';  gradeColor = '#10B981'; gradeBg = 'rgba(16,185,129,0.13)'; }
+  else if (total >= 70) { grade = 'B+'; gradeColor = '#60A5FA'; gradeBg = 'rgba(96,165,250,0.12)'; }
+  else if (total >= 60) { grade = 'B';  gradeColor = '#3B82F6'; gradeBg = 'rgba(59,130,246,0.12)'; }
+  else if (total >= 50) { grade = 'C+'; gradeColor = '#FCD34D'; gradeBg = 'rgba(252,211,77,0.11)'; }
+  else if (total >= 40) { grade = 'C';  gradeColor = '#F59E0B'; gradeBg = 'rgba(245,158,11,0.11)'; }
+  else if (total >= 28) { grade = 'D';  gradeColor = '#FB923C'; gradeBg = 'rgba(251,146,60,0.11)'; }
+  else                  { grade = 'F';  gradeColor = '#F43F5E'; gradeBg = 'rgba(244,63,94,0.11)'; }
+
+  return {
+    total, grade, gradeColor, gradeBg, isChain,
+    categories: [
+      { label: 'Digital Need',     pts: digitalPts, max: 30, note: digitalNote },
+      { label: 'Revenue Capacity', pts: revenuePts, max: 22, note: data.revenueNote },
+      { label: 'Owner Signal',     pts: ownerPts,   max: 20, note: ownerDetails.join(' · ') },
+      { label: 'SEO Value',        pts: seoPts,     max: 18, note: data.seoNote },
+      { label: 'Listing Quality',  pts: listingPts, max: 10, note: listingDetails.join(' · ') || 'No phone, address, or hours listed.' },
+    ],
+  };
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderResults() {
+  const tab = state.activeTab;
+  let list  = state.results;
+
+  if (tab === 'hot')       list = list.filter(b => b.scoring.total >= 70 && !state.contacted[b.id] && !state.skipped[b.id]);
+  if (tab === 'contacted') list = list.filter(b => state.contacted[b.id]);
+  if (tab === 'skipped')   list = list.filter(b => state.skipped[b.id]);
+
+  const count   = list.length;
+  const total   = state.results.length;
+  const hot     = state.results.filter(b => b.scoring.total >= 70 && !state.contacted[b.id] && !state.skipped[b.id]).length;
+  const avgScore = total ? Math.round(state.results.reduce((s, b) => s + b.scoring.total, 0) / total) : 0;
+  document.getElementById('result-count').textContent = total ? `${count} shown` : '';
+
+  if (!total) { showState('empty'); document.getElementById('result-count').textContent = ''; return; }
+
+  const summaryHtml = `
+    <div class="summary-row" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+      <div class="stat-pill">
+        <span style="color:#FB7185; font-weight:600;">${hot}</span>
+        <span style="color:var(--muted);">hot leads</span>
+      </div>
+      <div class="stat-pill">
+        <span style="color:#34D399; font-weight:600;">${Object.keys(state.contacted).filter(id => state.results.find(b => b.id === id)).length}</span>
+        <span style="color:var(--muted);">contacted</span>
+      </div>
+      <div class="stat-pill">
+        <span style="color:var(--text); font-weight:600;">avg ${avgScore}</span>
+        <span style="color:var(--muted);">score</span>
+      </div>
+      <div class="stat-pill">
+        <span style="color:var(--text); font-weight:600;">${total}</span>
+        <span style="color:var(--muted);">total results</span>
+      </div>
+    </div>
+  `;
+
+  const cardsHtml = list.map((biz, i) => renderCard(biz, i)).join('');
+  document.getElementById('results-list').innerHTML = summaryHtml + cardsHtml;
+  showState('results');
+}
+
+function renderCard(biz, index) {
+  const isContacted = !!state.contacted[biz.id];
+  const isSkipped   = !!state.skipped[biz.id];
+  const isExpanded  = !!state.expanded[biz.id];
+  const note        = state.notes[biz.id] || '';
+  const delay       = Math.min(index * 0.04, 0.3);
+  const { total: score, grade, gradeColor, gradeBg, isChain, categories } = biz.scoring;
+
+  const websiteBadge = isChain
+    ? `<span class="badge badge-chain">Chain</span>`
+    : !biz.website
+      ? `<span class="badge badge-no-site">No Website</span>`
+      : isSocialUrl(biz.website)
+        ? `<span class="badge badge-social">Social Only</span>`
+        : `<span class="badge badge-has-site">Has Website</span>`;
+
+  const categoryHtml = categories.map(cat => {
+    const pct      = Math.round((cat.pts / cat.max) * 100);
+    const barColor = cat.pts === 0 ? 'rgba(255,255,255,0.1)' : gradeColor;
+    return `
+      <div style="margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px;">
+          <span style="font-size:10px; font-weight:700; letter-spacing:0.05em; color:var(--muted); text-transform:uppercase;">${cat.label}</span>
+          <span class="mono" style="font-size:11px; color:${cat.pts > 0 ? gradeColor : 'var(--muted)'};">${cat.pts}<span style="color:var(--muted); font-size:10px;">/${cat.max}</span></span>
+        </div>
+        <div style="height:3px; background:rgba(255,255,255,0.07); border-radius:999px; overflow:hidden; margin-bottom:5px;">
+          <div style="height:100%; width:${pct}%; background:${barColor}; border-radius:999px; transition:width 0.4s ease;"></div>
+        </div>
+        <div style="font-size:11px; color:var(--muted); line-height:1.55;">${cat.note}</div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="biz-card" style="animation-delay:${delay}s;" id="card-${biz.id}">
+
+      <!-- Top row -->
+      <div style="display:flex; align-items:flex-start; gap:11px;">
+        <!-- Grade -->
+        <div onclick="toggleExpand('${biz.id}')" style="flex-shrink:0; width:48px; height:48px; border-radius:11px; background:${gradeBg}; border:1.5px solid ${gradeColor}44; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; transition:transform 0.15s ease, box-shadow 0.15s ease;" onmouseenter="this.style.boxShadow='0 0 0 3px ${gradeColor}25'" onmouseleave="this.style.boxShadow='none'">
+          <div style="font-weight:800; font-size:19px; line-height:1; color:${gradeColor};">${grade}</div>
+          <div class="mono" style="font-size:9px; color:${gradeColor}; opacity:0.75; margin-top:1px;">${score}</div>
+        </div>
+        <!-- Info -->
+        <div style="flex:1; min-width:0;">
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:5px;">
+            ${websiteBadge}
+            <span class="mono" style="font-size:10px; color:var(--muted);">${biz.type}</span>
+          </div>
+          <div style="font-size:14px; font-weight:700; line-height:1.2; letter-spacing:-0.01em; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escHtml(biz.name)}</div>
+          ${biz.address ? `<div style="font-size:12px; color:var(--muted); line-height:1.4;">${escHtml(biz.address)}</div>` : ''}
+        </div>
+        <!-- Expand -->
+        <button class="icon-btn" onclick="toggleExpand('${biz.id}')" title="Score breakdown / Notes">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M2 4h10M2 7h7M2 10h5" stroke="#5A7090" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Action row -->
+      <div style="display:flex; gap:6px; margin-top:12px; align-items:center; flex-wrap:wrap;">
+        ${biz.phone ? `
+          <a href="tel:${biz.phone}" class="icon-btn" title="Call">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2.5 2a1 1 0 011-.5h1.8l1 2.5-.9.7a7 7 0 002.9 2.9l.7-.9L11.5 7.7V9.5A1 1 0 0111 10.5C6.4 10.5 2 6.1 2 1.5" stroke="#5A7090" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </a>
+        ` : ''}
+        ${biz.website ? `
+          <a href="${escHtml(biz.website)}" target="_blank" class="icon-btn" title="Visit Website">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="5.5" stroke="#5A7090" stroke-width="1.5"/>
+              <path d="M7 1.5c-1.5 2-1.5 9 0 11M1.5 7h11M2 4.5h10M2 9.5h10" stroke="#5A7090" stroke-width="1.2"/>
+            </svg>
+          </a>
+        ` : ''}
+        <a href="https://www.google.com/search?q=${encodeURIComponent(biz.name + (biz.address ? ' ' + biz.address : ''))}" target="_blank" class="icon-btn" title="Google Search">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <circle cx="6" cy="6" r="4.5" stroke="#5A7090" stroke-width="1.5"/>
+            <path d="M9.5 9.5l2.5 2.5" stroke="#5A7090" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </a>
+        ${biz.lat ? `
+          <a href="https://maps.apple.com/?q=${encodeURIComponent(biz.name)}&ll=${biz.lat},${biz.lon}" target="_blank" class="icon-btn" title="Open in Maps">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M7 1.5C4.5 1.5 2.5 3.5 2.5 6c0 3.5 4.5 7 4.5 7s4.5-3.5 4.5-7C11.5 3.5 9.5 1.5 7 1.5z" stroke="#5A7090" stroke-width="1.5"/>
+              <circle cx="7" cy="6" r="1.5" stroke="#5A7090" stroke-width="1.3"/>
+            </svg>
+          </a>
+        ` : ''}
+
+        <div style="flex:1;"></div>
+
+        <button class="toggle-btn ${isContacted ? 'contacted' : ''}" onclick="toggleContacted('${biz.id}')">
+          ${isContacted ? '&#10003; Contacted' : isSkipped ? 'Skipped' : 'Mark'}
+        </button>
+        ${!isContacted ? `
+          <button class="icon-btn" onclick="toggleSkip('${biz.id}')" title="${isSkipped ? 'Un-skip' : 'Skip'}" style="${isSkipped ? 'border-color:rgba(245,158,11,0.4); background:rgba(245,158,11,0.08);' : ''}">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+              <path d="M2 2l9 9M11 2L2 11" stroke="${isSkipped ? '#FCD34D' : '#5A7090'}" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </button>
+        ` : ''}
+      </div>
+
+      <!-- Expandable section -->
+      <div class="expand-section ${isExpanded ? 'open' : ''}" id="expand-${biz.id}">
+        <div class="divider"></div>
+
+        ${biz.phone   ? `<div style="font-size:12px; color:var(--muted); margin-bottom:5px;">&#128222; <span class="mono" style="color:var(--text);">${escHtml(biz.phone)}</span></div>` : ''}
+        ${biz.website ? `<div style="font-size:12px; color:var(--muted); margin-bottom:5px; word-break:break-all;">&#127760; <a href="${escHtml(biz.website)}" target="_blank" style="color:#FB923C; text-decoration:none;">${escHtml(biz.website)}</a></div>` : ''}
+
+        <div style="margin-top:12px; margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <span style="font-size:10px; font-weight:700; letter-spacing:0.06em; color:var(--muted); text-transform:uppercase;">Score Breakdown</span>
+            <span class="mono" style="font-size:13px; font-weight:500; color:${gradeColor};">${score}/100 &nbsp;<span style="font-weight:800; font-family:'Inter',sans-serif;">${grade}</span></span>
+          </div>
+          <div style="background:rgba(0,0,0,0.22); border-radius:10px; padding:14px 14px 6px;">
+            ${categoryHtml}
+          </div>
+          ${isChain ? `<div style="margin-top:8px; font-size:11px; color:#F87171; line-height:1.5;">Chain detected — corporate controls the website. This owner cannot buy a site from you.</div>` : ''}
+        </div>
+
+        <div>
+          <div style="font-size:10px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); margin-bottom:6px;">Notes</div>
+          <textarea class="notes-area" placeholder="Add notes about this lead..." onchange="saveNote('${biz.id}', this.value)">${escHtml(note)}</textarea>
+        </div>
+      </div>
+
+    </div>
+  `;
+}
+
+// ============================================================
+// ACTIONS
+// ============================================================
+function toggleContacted(id) {
+  if (state.contacted[id]) { delete state.contacted[id]; }
+  else { state.contacted[id] = true; delete state.skipped[id]; saveSkipped(); }
+  saveContacted(); renderResults();
+}
+
+function toggleSkip(id) {
+  if (state.skipped[id]) { delete state.skipped[id]; }
+  else { state.skipped[id] = true; }
+  saveSkipped(); renderResults();
+}
+
+function saveNote(id, value) {
+  if (value) state.notes[id] = value; else delete state.notes[id];
+  saveNotes();
+}
+
+function toggleExpand(id) {
+  state.expanded[id] = !state.expanded[id];
+  const el = document.getElementById(`expand-${id}`);
+  if (el) el.classList.toggle('open', state.expanded[id]);
+}
+
+// ============================================================
+// UI HELPERS
+// ============================================================
+function showState(which) {
+  document.getElementById('empty-state').style.display   = which === 'empty'   ? 'flex' : 'none';
+  document.getElementById('loading-state').style.display = which === 'loading' ? 'flex' : 'none';
+  document.getElementById('error-state').style.display   = which === 'error'   ? 'flex' : 'none';
+}
+
+function setTab(tab) { state.activeTab = tab; setTabUI(tab); renderResults(); }
+
+function setTabUI(tab) {
+  document.querySelectorAll('.filter-tab').forEach(el => {
+    el.classList.toggle('active', el.dataset.tab === tab);
+  });
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ============================================================
+// INDUSTRY CHIP SELECTION
+// ============================================================
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    state.industry = chip.dataset.industry;
+  });
+});
+
+// Search on Enter
+document.getElementById('city-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); runSearch(); }
+});
+
+showState('empty');
+</script>
+</body>
+</html>
