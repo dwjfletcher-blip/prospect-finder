@@ -555,39 +555,20 @@ async function geocodeCity(city) {
   } catch { return null; }
 }
 
-const OVERPASS_ENDPOINTS = [
-  'https://overpass-api.de/api/interpreter',
-  'https://overpass.kumi.systems/api/interpreter',
-  'https://overpass.openstreetmap.ru/api/interpreter',
-  'https://overpass.nchc.org.tw/api/interpreter',
-  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
-];
-
 async function fetchOverpass(query) {
-  let lastErr;
-  for (const url of OVERPASS_ENDPOINTS) {
-    try {
-      console.log('[Overpass] Trying:', url);
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 30000);
-      const res = await fetch(url, {
-        method: 'POST',
-        body: 'data=' + encodeURIComponent(query),
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        signal: controller.signal,
-      });
-      clearTimeout(timer);
-      if (res.status === 429) { console.warn('[Overpass] Rate limited:', url); lastErr = new Error('rate_limit'); continue; }
-      if (!res.ok) { console.warn('[Overpass] HTTP error', res.status, url); lastErr = new Error(`HTTP ${res.status}`); continue; }
-      console.log('[Overpass] Success:', url);
-      return await res.json();
-    } catch (e) {
-      console.error('[Overpass] Failed:', url, e.name, e.message);
-      lastErr = e; continue;
-    }
+  const res = await fetch('/api/overpass', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    if (err.error === 'rate_limited') throw new Error('The map data service is busy. Wait 30 seconds and try again.');
+    throw new Error('Map data service failed. Try again in a moment.');
   }
-  if (lastErr?.message === 'rate_limit') throw new Error('The map data service is busy. Wait 30 seconds and try again.');
-  throw new Error(`All map data servers failed. Last error: ${lastErr?.message || 'unknown'}`);
+
+  return res.json();
 }
 
 async function queryOverpass(lat, lon, radius, industryKey) {
